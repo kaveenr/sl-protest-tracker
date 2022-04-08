@@ -1,37 +1,15 @@
+import { json, LoaderFunction } from '@remix-run/node';
+import { useLoaderData } from '@remix-run/react';
 import { useState } from 'react';
 import Map, { Marker, Popup } from 'react-map-gl';
+import { MapPoint } from '~/services/sheetService';
 
-interface DataPoint {
-  [key: string]: string;
-}
-
-interface MapPoint {
-  lat: number,
-  lng: number,
-  id: string,
-  location: string,
-  date: string,
-  notes: string,
-  link: string
-}
-
-const data: DataPoint[] = require("../data.json");
-const vettedData = data
-  .filter((i)=> i["LatLng (approx)"])
-  .map((i: DataPoint) => {
-    const cords = i["LatLng (approx)"].split(",").map((l: string)=>(parseFloat(l.trim())));
-    return {
-      lat: cords[0],
-      lng: cords[1],
-      id: i["Protest_ID"],
-      location: i["Location"],
-      date: i["Date"],
-      notes: i["Notes on protest - @yudhanjaya"] || undefined,
-      link: i["Footage (links, add multiple if possible)"]
-    }
-  }).filter((i) => (i.lat != null && i.lng != null));
+export const loader: LoaderFunction = async () => {
+  return json(require("app/data.json"));
+};
 
 export default function Index() {
+  const vettedData: MapPoint[] = useLoaderData();
   const [current, setCurrent] = useState<MapPoint | undefined>(undefined);
 
   return (
@@ -41,7 +19,7 @@ export default function Index() {
         <a className="text-blue-900 font-bold" href="https://docs.google.com/spreadsheets/d/1yShvemHd_eNNAtC3pmxPs9B5RbGmfBUP1O6WGQ5Ycrg/edit#gid=0">Data Source By watchdog.team</a>
       </div>
       <Map
-        mapboxAccessToken={process.env.MAPBOX_TOKEN}
+        mapboxAccessToken={"pk.eyJ1IjoidWtyaHEiLCJhIjoiY2tzb3M0eWMyMGNmNTJwcGpkcXVram9meiJ9.9OFEvFweEqa3kcJS9jyPSg"}
         initialViewState={{
           longitude: 79.861244,
           latitude: 6.927079,
@@ -53,7 +31,7 @@ export default function Index() {
       >
         {vettedData.map((i) => (
           <Marker key={i.id} latitude={i.lat} longitude={i.lng} >
-            <a href="#" onClick={(e) => {setCurrent(i)}} className="text-4xl p-1 bg-black rounded-full opacity-75">
+            <a href="#" onClick={(e) => {setCurrent(i)}} className="text-2xl p-1 bg-black rounded-full opacity-75">
               🪧
             </a>
           </Marker>
@@ -72,7 +50,11 @@ export default function Index() {
             <hr/>
             <p className='text-md'>{current.notes}</p>
             <hr/>
-            <p>{current.link}</p>
+            <ul>
+              {current.links.map((link) => (
+                <li><a href={link} className="text-blue-900" >{link.slice(0,25)}...</a></li>
+              ))}
+            </ul>
           </Popup>
         )}
       </Map>
