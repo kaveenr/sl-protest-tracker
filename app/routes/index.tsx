@@ -19,7 +19,7 @@ export default function Index() {
         <a className="text-blue-900 font-bold" href="https://docs.google.com/spreadsheets/d/1yShvemHd_eNNAtC3pmxPs9B5RbGmfBUP1O6WGQ5Ycrg/edit#gid=0">Data Source By watchdog.team</a>
       </div>
       <Map
-        mapboxAccessToken={"pk.eyJ1IjoidWtyaHEiLCJhIjoiY2tzb3M0eWMyMGNmNTJwcGpkcXVram9meiJ9.9OFEvFweEqa3kcJS9jyPSg"}
+        mapboxAccessToken={"pk.eyJ1IjoidWtyaHEiLCJhIjoiY2wxcW8wbG9hMG9mNjNvbXUzYnQweXMwYiJ9.QyJ6j0pLyLs4MlkmoiC5ww"}
         initialViewState={{
           longitude: 79.861244,
           latitude: 6.927079,
