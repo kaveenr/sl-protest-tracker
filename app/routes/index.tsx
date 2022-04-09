@@ -16,9 +16,8 @@ export default function Index() {
   return (
     <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
       <div className='absolute top-0 left-0 z-50 p-4'>
-
-        <div className="card w-96 bg-base-100 shadow-xl">
-          <div className="card-body">
+        <div className="card w-80 md:w-96 bg-base-100 shadow-xl">
+          <div className="card-body text-xs md:text-xl">
             <h2 className="card-title">🇱🇰 Protest Tracker</h2>
             <p>Visualization of protests taking place in Sri Lanka with data provided by <a href="https://www.watchdog.team" className='text-blue-100'>Watchdog</a>.</p>
             <div className="card-actions justify-center mt-1">
@@ -31,9 +30,9 @@ export default function Index() {
       <Map
         mapboxAccessToken={"pk.eyJ1IjoidWtyaHEiLCJhIjoiY2wxcW8wbG9hMG9mNjNvbXUzYnQweXMwYiJ9.QyJ6j0pLyLs4MlkmoiC5ww"}
         initialViewState={{
-          longitude: 79.861244,
-          latitude: 6.927079,
-          zoom: 8,
+          longitude: 79.5823894,
+          latitude: 7.8561923,
+          zoom: 7.6,
           bearing: 0,
           pitch: 0
         }}
@@ -56,8 +55,8 @@ export default function Index() {
             onClose={() => setCurrent(undefined)}
             maxWidth={"360px"}
           >
-            <div className="card-compact text-black">
-              <div className="card-body">
+            <div className="card-compact text-black p-0">
+              <div className="card-body text-xs md:text-xl p-0">
                 <h2 className="card-title">
                   {current.location}
                   <div className="badge badge-secondary">{current.date}</div>  
