@@ -1,17 +1,40 @@
 import { json, LoaderFunction } from '@remix-run/node';
-import { useLoaderData } from '@remix-run/react';
-import { useState } from 'react';
+import { useLoaderData, useLocation, useSearchParams } from '@remix-run/react';
+import { useEffect, useState } from 'react';
 import Map, { Marker, Popup } from 'react-map-gl';
 import { MapPoint, PointSize } from '~/services/sheetService';
 import marker from '~/assets/marker.png';
 
-export const loader: LoaderFunction = async () => {
-  return json(require("app/assets/data.json"));
+interface LoaderResponse {
+  current?: MapPoint;
+  dataset: MapPoint[];
+}
+
+export const loader: LoaderFunction = async ({request}) => {
+  const url = new URL(request.url);
+  const current = url.searchParams.get("current");
+  const dataset: MapPoint[] = require("app/assets/data.json");
+
+  return json({
+    current: dataset.find((i) => (i.id == current)),
+    dataset: dataset
+  });
 };
 
 export default function Index() {
-  const vettedData: MapPoint[] = useLoaderData();
-  const [current, setCurrent] = useState<MapPoint | undefined>(undefined);
+  const data: LoaderResponse = useLoaderData();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [current, setCurrent] = useState<MapPoint | undefined>(data.current);
+  useEffect(() => {
+    let params = searchParams;
+    if (current) {
+      params.set("current", current.id);
+    } else {
+      params.delete("current");
+    }
+    setSearchParams(params);
+  }, [current])
 
   return (
     <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
@@ -25,20 +48,19 @@ export default function Index() {
             </div>
           </div>
         </div>
-
       </div>
       <Map
         mapboxAccessToken={"pk.eyJ1IjoidWtyaHEiLCJhIjoiY2wxcW8wbG9hMG9mNjNvbXUzYnQweXMwYiJ9.QyJ6j0pLyLs4MlkmoiC5ww"}
         initialViewState={{
-          longitude: 80.666632,
-          latitude: 7.979762,
-          zoom: 7.5,
+          longitude: current?.lng || 80.666632,
+          latitude: current?.lat ||7.979762,
+          zoom: current ? 12 : 7.5,
           bearing: 0,
           pitch: 0
         }}
         mapStyle="mapbox://styles/mapbox/dark-v10"
       >
-        {vettedData.filter((i) => (i.size)).map((i) => {
+        {data.dataset.filter((i) => (i.size)).map((i) => {
           let em = 0;
           if (i.size == PointSize.large){
             em = 6;
@@ -49,7 +71,7 @@ export default function Index() {
           }
           return (
             <Marker key={i.id} latitude={i.lat} longitude={i.lng} style={{ width: `${em}em`, height: `${em}em`}}>
-              <a href={`#${i.id}`} onClick={(e) => { setCurrent(i) }} className={`w-full h-full bg-opacity-20 bg-red-900 rounded-full flex justify-center items-center`}>
+              <a onClick={(e) => { setCurrent(i) }} className={`w-full h-full bg-opacity-20 bg-red-900 rounded-full flex justify-center items-center`}>
                 <img src={marker} width={"32px"} height={"32px"} />
               </a>
             </Marker>
