@@ -87,7 +87,7 @@ export default function Index() {
           <div className="card-body">
             <input type="range" min="0" max={dateRange} value={days} onChange={(e) => {setDays(parseInt(e.target.value)); setCurrent(undefined)}} className="range"/>
             <p className='text-center'>
-              <b>{dateRangeStart.toLocaleString()}</b> - <b>{dateRangeStart.plus({days: days}).toLocaleString()}</b>
+              <b>{dateRangeStart.toFormat("DD")}</b> - <b>{dateRangeStart.plus({days: days}).toFormat("DD")}</b>
             </p>
           </div>
         </div>
@@ -129,14 +129,21 @@ export default function Index() {
             closeOnClick={false}
             onClose={() => setCurrent(undefined)}
             maxWidth={"360px"}
+            className='p-0'
           >
-            <div className="card-compact text-black p-0">
-              <div className="card-body text-xs md:text-xl p-0">
+            <div className="card-compact text-black">
+              <div className="card-body text-xs md:text-xl" style={{padding: "0.2em 0.3em"}}>
                 <h2 className="card-title">
-                  {current.location}
+                  <p className="truncate">{current.location}</p>
                   <div className="badge badge-secondary">{DateTime.fromISO(current.date.toString()).toLocaleString()}</div>  
                 </h2>
-                <p>{current.notes || "Notes Not Available"}</p>
+                <div className="prose-sm prose-stone">
+                  <p>{current.notes || "Notes Not Available"}</p>
+                </div>
+                <div className="flex gap-2">
+                  { current.size ? (<div className="badge badge-lg badge-primary">Size: {current.size}</div>) : [] }
+                  { current.links.length !=0 ? (<div className="badge badge-lg">Links: {current.links.length}</div>) : [] }
+                </div>
               </div>
             </div>
           </Popup>
