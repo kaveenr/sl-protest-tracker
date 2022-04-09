@@ -2,7 +2,7 @@ import { json, LoaderFunction } from '@remix-run/node';
 import { useLoaderData } from '@remix-run/react';
 import { useState } from 'react';
 import Map, { Marker, Popup } from 'react-map-gl';
-import { MapPoint } from '~/services/sheetService';
+import { MapPoint, PointSize } from '~/services/sheetService';
 import marker from '~/assets/marker.png';
 
 export const loader: LoaderFunction = async () => {
@@ -38,13 +38,23 @@ export default function Index() {
         }}
         mapStyle="mapbox://styles/mapbox/dark-v10"
       >
-        {vettedData.map((i) => (
-          <Marker key={i.id} latitude={i.lat} longitude={i.lng} >
-            <a href={`#${i.id}`} onClick={(e) => { setCurrent(i) }}>
-              <img src={marker} width={"32px"} height={"32px"} />
-            </a>
-          </Marker>
-        ))}
+        {vettedData.filter((i) => (i.size)).map((i) => {
+          let em = 0;
+          if (i.size == PointSize.large){
+            em = 6;
+          } else if(i.size == PointSize.medium){
+            em = 5;
+          } else {
+            em = 4
+          }
+          return (
+            <Marker key={i.id} latitude={i.lat} longitude={i.lng} style={{ width: `${em}em`, height: `${em}em`}}>
+              <a href={`#${i.id}`} onClick={(e) => { setCurrent(i) }} className={`w-full h-full bg-opacity-20 bg-red-900 rounded-full flex justify-center items-center`}>
+                <img src={marker} width={"32px"} height={"32px"} />
+              </a>
+            </Marker>
+          );
+        })}
 
         {current && (
           <Popup
@@ -62,6 +72,7 @@ export default function Index() {
                   <div className="badge badge-secondary">{current.date}</div>  
                 </h2>
                 <p>{current.notes || "Notes Not Available"}</p>
+                <p><b>Size:</b> {current.size || "Not Defined"}</p>
                 <ul>
                 {current.links.map((link) => (
                   <li><a href={link} className="text-blue-900 truncate" target="_blank">{link.slice(0, 40)}...</a></li>

@@ -1,5 +1,11 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 
+export enum PointSize {
+  small="small",
+  medium="medium",
+  large="large"
+}
+
 export interface MapPoint {
     lat: number,
     lng: number,
@@ -7,7 +13,8 @@ export interface MapPoint {
     location: string,
     date: string,
     notes: string,
-    links: string[]
+    links: string[],
+    size?: PointSize
   }
   
 const LINK_REGEX = /(https?:\/\/[^\s!,]+)/g;
@@ -32,11 +39,29 @@ export async function getDataSet(): Promise<MapPoint[]>  {
           location: i["Location"],
           date: i["Date"],
           notes: i["Notes on protest - @yudhanjaya"] || undefined,
-          links: extractLinks(i["Footage (links, add multiple if possible)"] || "")
+          links: extractLinks(i["Footage (links, add multiple if possible)"] || ""),
+          size: mapPointSize(i["Size assessment (small-medium-large-XL, large being Mirihana)"] || "")
         }
       }).filter((i) => (i.lat != null && i.lng != null));
 }
 
 function extractLinks(linkStr: string): string[] {
     return linkStr.match(LINK_REGEX) || [];
+}
+
+function mapPointSize(name: string): PointSize | undefined {
+  switch(name.toLowerCase().trim()) { 
+    case "small": { 
+       return PointSize.small;
+    } 
+    case "medium": { 
+      return PointSize.medium;
+    } 
+    case "large": { 
+      return PointSize.large;
+    }
+    default: { 
+       return undefined;
+    } 
+ } 
 }
