@@ -5,6 +5,7 @@ import Map, { Marker, Popup } from 'react-map-gl';
 import { MapPoint, PointSize } from '~/services/sheetService';
 import marker from '~/assets/marker.png';
 import { DateTime } from 'luxon';
+import Embed from 'react-embed';
 
 interface LoaderResponse {
   current?: MapPoint;
@@ -32,6 +33,21 @@ export const loader: LoaderFunction = async ({request}) => {
   });
 };
 
+const EmbedViewer = (props: {links: string[]}) =>  {
+  if (typeof window === "undefined") {
+    return (<></>);
+  }
+  return (
+    <div className='absolute top-0 right-4 z-50 w-96 overflow-y-auto max-h-full'>
+        {props.links.map((link) => (
+          <div className="p-2" key={link}>
+            <Embed url={link} fallback={<h1>Loading data...</h1>}/>
+          </div>
+        ))}
+    </div>
+  );
+}
+
 export default function Index() {
   const data: LoaderResponse = useLoaderData();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,7 +67,7 @@ export default function Index() {
 
   return (
     <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
-      <div className='absolute top-0 left-0 z-50 p-4'>
+      <div className='absolute top-0 left-0 z-50 p-4 left-4'>
         <div className="card w-80 md:w-96 bg-base-100 shadow-xl">
           <div className="card-body">
             <h2 className="card-title text-md md:text-3xl">🇱🇰 Protest Tracker</h2>
@@ -112,20 +128,15 @@ export default function Index() {
               <div className="card-body text-xs md:text-xl p-0">
                 <h2 className="card-title">
                   {current.location}
-                  <div className="badge badge-secondary">{DateTime.fromISO(current.date).toLocaleString()}</div>  
+                  <div className="badge badge-secondary">{DateTime.fromISO(current.date.toString()).toLocaleString()}</div>  
                 </h2>
                 <p>{current.notes || "Notes Not Available"}</p>
-                <p><b>Size:</b> {current.size || "Not Defined"}</p>
-                <ul>
-                {current.links.map((link) => (
-                  <li><a href={link} className="text-blue-900 truncate" target="_blank">{link.slice(0, 40)}...</a></li>
-                ))}
-              </ul>
               </div>
             </div>
           </Popup>
         )}
       </Map>
+      {current ? <EmbedViewer links={current.links}/> : []}
     </div>
   );
 }
