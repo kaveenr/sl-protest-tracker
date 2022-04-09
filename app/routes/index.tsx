@@ -17,10 +17,10 @@ export default function Index() {
     <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
       <div className='absolute top-0 left-0 z-50 p-4'>
         <div className="card w-80 md:w-96 bg-base-100 shadow-xl">
-          <div className="card-body text-xs md:text-xl">
-            <h2 className="card-title">🇱🇰 Protest Tracker</h2>
-            <p>Visualization of protests taking place in Sri Lanka with data provided by <a href="https://www.watchdog.team" className='text-blue-100'>Watchdog</a>.</p>
-            <div className="card-actions justify-center mt-1">
+          <div className="card-body">
+            <h2 className="card-title text-md md:text-3xl">🇱🇰 Protest Tracker</h2>
+            <p className='text-xs md:text-lg'>Visualization of protests taking place in Sri Lanka with data provided by <a href="https://www.watchdog.team" className='text-blue-100'>Watchdog</a>.</p>
+            <div className="card-actions justify-left mt-2">
               <a className="btn btn-primary btn-sm" href="https://docs.google.com/spreadsheets/d/1yShvemHd_eNNAtC3pmxPs9B5RbGmfBUP1O6WGQ5Ycrg/edit#gid=0">Data Source</a>
             </div>
           </div>
@@ -30,9 +30,9 @@ export default function Index() {
       <Map
         mapboxAccessToken={"pk.eyJ1IjoidWtyaHEiLCJhIjoiY2wxcW8wbG9hMG9mNjNvbXUzYnQweXMwYiJ9.QyJ6j0pLyLs4MlkmoiC5ww"}
         initialViewState={{
-          longitude: 79.5823894,
-          latitude: 7.8561923,
-          zoom: 7.6,
+          longitude: 80.666632,
+          latitude: 7.979762,
+          zoom: 7.5,
           bearing: 0,
           pitch: 0
         }}
@@ -40,7 +40,7 @@ export default function Index() {
       >
         {vettedData.map((i) => (
           <Marker key={i.id} latitude={i.lat} longitude={i.lng} >
-            <a href="#" onClick={(e) => { setCurrent(i) }}>
+            <a href={`#${i.id}`} onClick={(e) => { setCurrent(i) }}>
               <img src={marker} width={"32px"} height={"32px"} />
             </a>
           </Marker>
