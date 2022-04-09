@@ -38,7 +38,7 @@ const EmbedViewer = (props: {links: string[]}) =>  {
     return (<></>);
   }
   return (
-    <div className='absolute top-0 right-4 z-50 w-96 overflow-y-auto max-h-full'>
+    <div className='absolute top-0 right-4 z-50 w-96 overflow-y-auto max-h-full hidden md:block'>
         {props.links.map((link) => (
           <div className="p-2" key={link}>
             <Embed url={link} fallback={<h1>Loading data...</h1>}/>
