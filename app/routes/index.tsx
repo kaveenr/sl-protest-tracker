@@ -14,10 +14,19 @@ export default function Index() {
   const [current, setCurrent] = useState<MapPoint | undefined>(undefined);
 
   return (
-    <div className='static' style={{height: "100vh", width: "100vw", padding: "0px", margin: "0px"}}>
-      <div className='absolute top-0 left-0 z-50 p-4 bg-white'>
-        <h1 className='text-xl'>Protest Tracker #LKA</h1>
-        <a className="text-blue-900 font-bold" href="https://docs.google.com/spreadsheets/d/1yShvemHd_eNNAtC3pmxPs9B5RbGmfBUP1O6WGQ5Ycrg/edit#gid=0">Data Source By watchdog.team</a>
+    <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
+      <div className='absolute top-0 left-0 z-50 p-4'>
+
+        <div className="card w-96 bg-base-100 shadow-xl">
+          <div className="card-body">
+            <h2 className="card-title">🇱🇰 Protest Tracker</h2>
+            <p>Visualization of protests taking place in Sri Lanka with data provided by <a href="https://www.watchdog.team" className='text-blue-100'>Watchdog</a>.</p>
+            <div className="card-actions justify-center mt-1">
+              <a className="btn btn-primary btn-sm" href="https://docs.google.com/spreadsheets/d/1yShvemHd_eNNAtC3pmxPs9B5RbGmfBUP1O6WGQ5Ycrg/edit#gid=0">Data Source</a>
+            </div>
+          </div>
+        </div>
+
       </div>
       <Map
         mapboxAccessToken={"pk.eyJ1IjoidWtyaHEiLCJhIjoiY2wxcW8wbG9hMG9mNjNvbXUzYnQweXMwYiJ9.QyJ6j0pLyLs4MlkmoiC5ww"}
@@ -32,8 +41,8 @@ export default function Index() {
       >
         {vettedData.map((i) => (
           <Marker key={i.id} latitude={i.lat} longitude={i.lng} >
-            <a href="#" onClick={(e) => {setCurrent(i)}}>
-              <img src={marker} width={"32px"} height={"32px"}/>
+            <a href="#" onClick={(e) => { setCurrent(i) }}>
+              <img src={marker} width={"32px"} height={"32px"} />
             </a>
           </Marker>
         ))}
@@ -45,18 +54,21 @@ export default function Index() {
             latitude={current.lat}
             closeOnClick={false}
             onClose={() => setCurrent(undefined)}
+            maxWidth={"360px"}
           >
-            <div className='p-2'>
-              <h2 className={"text-xl mb-1"}>{current.location}</h2>
-              <p className='font-semibold'>{current.date}</p>
-              <hr/>
-              <p className='text-md'>{current.notes}</p>
-              <hr/>
-              <ul>
+            <div className="card-compact text-black">
+              <div className="card-body">
+                <h2 className="card-title">
+                  {current.location}
+                  <div className="badge badge-secondary">{current.date}</div>  
+                </h2>
+                <p>{current.notes || "Notes Not Available"}</p>
+                <ul>
                 {current.links.map((link) => (
-                  <li><a href={link} className="text-blue-900" target="_blank">{link.slice(0,25)}...</a></li>
+                  <li><a href={link} className="text-blue-900 truncate" target="_blank">{link.slice(0, 40)}...</a></li>
                 ))}
               </ul>
+              </div>
             </div>
           </Popup>
         )}
