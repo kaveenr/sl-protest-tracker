@@ -38,7 +38,7 @@ const EmbedViewer = (props: {links: string[]}) =>  {
     return (<></>);
   }
   return (
-    <div className='absolute top-0 right-4 z-50 w-96 overflow-y-auto max-h-full hidden md:block'>
+    <div className='absolute top-0 right-0 p-4 z-50 w-96 overflow-y-auto max-h-full hidden md:block'>
         {props.links.map((link) => (
           <div className="p-2" key={link}>
             <Embed url={link} fallback={<h1>Loading data...</h1>}/>
@@ -67,7 +67,7 @@ export default function Index() {
 
   return (
     <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
-      <div className='absolute top-0 left-0 z-50 p-4 left-4'>
+      <div className='absolute top-0 left-0 z-50 p-4'>
         <div className="card w-80 md:w-96 bg-base-100 shadow-xl">
           <div className="card-body">
             <h2 className="card-title text-md md:text-3xl">🇱🇰 Protest Tracker</h2>
@@ -77,7 +77,7 @@ export default function Index() {
             </div>
           </div>
         </div>
-        <div className="card w-80 md:w-96 bg-base-100 shadow-xl mt-4">
+        <div className="card w-80 md:w-96 bg-base-100 shadow-xl mt-4 hidden md:block">
           <div className="card-body">
             <input type="range" min="0" max={data.numDays} value={days} onChange={(e) => {setDays(parseInt(e.target.value)); setCurrent(undefined)}} className="range"/>
             <p className='text-center'>
