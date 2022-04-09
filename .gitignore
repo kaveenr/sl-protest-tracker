@@ -5,4 +5,5 @@ node_modules
 /.netlify
 .env
 app/styles/app.css
-app/data.json
+app/assets/data.json
+pnpm-lock.yaml
