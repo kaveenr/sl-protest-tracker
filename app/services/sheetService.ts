@@ -1,4 +1,5 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
+import { DateTime } from "luxon";
 
 export enum PointSize {
   small="small",
@@ -11,7 +12,7 @@ export interface MapPoint {
     lng: number,
     id: string,
     location: string,
-    date: string,
+    date: DateTime,
     notes: string,
     links: string[],
     size?: PointSize
@@ -29,7 +30,7 @@ export async function getDataSet(): Promise<MapPoint[]>  {
     const masterRecords = doc.sheetsByTitle["Protests"];
     const masterRows = await masterRecords.getRows();
     return masterRows
-      .filter((i)=> i["LatLng (approx)"])
+      .filter((i)=> i["LatLng (approx)"] && i["Protest_ID"])
       .map((i) => {
         const cords = i["LatLng (approx)"].split(",").map((l: string)=>(parseFloat(l.trim())));
         return {
@@ -37,12 +38,14 @@ export async function getDataSet(): Promise<MapPoint[]>  {
           lng: cords[1],
           id: i["Protest_ID"],
           location: i["Location"],
-          date: i["Date"],
+          date: i["Date"] ? DateTime.fromFormat(i["Date"],"d/M/y") : DateTime.now(),
           notes: i["Notes on protest - @yudhanjaya"] || undefined,
           links: extractLinks(i["Footage (links, add multiple if possible)"] || ""),
           size: mapPointSize(i["Size assessment (small-medium-large-XL, large being Mirihana)"] || "")
         }
-      }).filter((i) => (i.lat != null && i.lng != null));
+      })
+      .filter((i) => (i.lat != null && i.lng != null))
+      .sort((a, b) => (a.date.toUnixInteger() - b.date.toUnixInteger()));
 }
 
 function extractLinks(linkStr: string): string[] {

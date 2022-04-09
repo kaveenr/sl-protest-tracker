@@ -4,20 +4,31 @@ import { useEffect, useState } from 'react';
 import Map, { Marker, Popup } from 'react-map-gl';
 import { MapPoint, PointSize } from '~/services/sheetService';
 import marker from '~/assets/marker.png';
+import { DateTime } from 'luxon';
 
 interface LoaderResponse {
   current?: MapPoint;
   dataset: MapPoint[];
+  numDays: number;
+  startDate: string;
 }
 
 export const loader: LoaderFunction = async ({request}) => {
   const url = new URL(request.url);
   const current = url.searchParams.get("current");
-  const dataset: MapPoint[] = require("app/assets/data.json");
-
+  const from = url.searchParams.has("from") ? DateTime.fromISO(url.searchParams.get("from")||"") : undefined;
+  const raw_dataset = require("app/assets/data.json");
+  const dataset: MapPoint[] = raw_dataset.map((d: {date:string}) => ({...d, date: DateTime.fromISO(d.date)}))
+  const num_days = dataset[dataset.length-1].date.diff(dataset[0].date).as('days');
   return json({
     current: dataset.find((i) => (i.id == current)),
-    dataset: dataset
+    dataset: dataset.filter((i) => {
+      if (from) {
+        return i.date.startOf("day") <= from.startOf("day")
+      }
+    }),
+    numDays: Math.floor(num_days),
+    startDate: dataset[0].date
   });
 };
 
@@ -26,15 +37,17 @@ export default function Index() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [current, setCurrent] = useState<MapPoint | undefined>(data.current);
+  const [days, setDays] = useState(data.numDays);
   useEffect(() => {
     let params = searchParams;
+    params.set("from", DateTime.fromISO(data.startDate).plus({days: days}).toISODate())
     if (current) {
       params.set("current", current.id);
     } else {
       params.delete("current");
     }
     setSearchParams(params);
-  }, [current])
+  }, [current, days])
 
   return (
     <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
@@ -46,6 +59,14 @@ export default function Index() {
             <div className="card-actions justify-left mt-2">
               <a className="btn btn-primary btn-sm" href="https://docs.google.com/spreadsheets/d/1yShvemHd_eNNAtC3pmxPs9B5RbGmfBUP1O6WGQ5Ycrg/edit#gid=0">Data Source</a>
             </div>
+          </div>
+        </div>
+        <div className="card w-80 md:w-96 bg-base-100 shadow-xl mt-4">
+          <div className="card-body">
+            <input type="range" min="0" max={data.numDays} value={days} onChange={(e) => {setDays(parseInt(e.target.value)); setCurrent(undefined)}} className="range"/>
+            <p className='text-center'>
+              <b>{DateTime.fromISO(data.startDate).toLocaleString()}</b> - <b>{DateTime.fromISO(data.startDate).plus({days: days}).toLocaleString()}</b>
+            </p>
           </div>
         </div>
       </div>
@@ -91,7 +112,7 @@ export default function Index() {
               <div className="card-body text-xs md:text-xl p-0">
                 <h2 className="card-title">
                   {current.location}
-                  <div className="badge badge-secondary">{current.date}</div>  
+                  <div className="badge badge-secondary">{DateTime.fromISO(current.date).toLocaleString()}</div>  
                 </h2>
                 <p>{current.notes || "Notes Not Available"}</p>
                 <p><b>Size:</b> {current.size || "Not Defined"}</p>
