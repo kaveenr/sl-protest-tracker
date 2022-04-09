@@ -1,5 +1,5 @@
 import { json, LoaderFunction } from '@remix-run/node';
-import { useLoaderData, useLocation, useSearchParams } from '@remix-run/react';
+import { useLoaderData, useSearchParams } from '@remix-run/react';
 import { useEffect, useState } from 'react';
 import Map, { Marker, Popup } from 'react-map-gl';
 import { MapPoint, PointSize } from '~/services/sheetService';
@@ -7,20 +7,21 @@ import marker from '~/assets/marker.png';
 import { DateTime } from 'luxon';
 import Embed from 'react-embed';
 
+const raw_dataset = require("app/assets/data.json");
+
 interface LoaderResponse {
   current?: MapPoint;
   dataset: MapPoint[];
-  numDays: number;
   startDate: string;
+  endDate: string;
 }
 
 export const loader: LoaderFunction = async ({request}) => {
   const url = new URL(request.url);
   const current = url.searchParams.get("current");
   const from = url.searchParams.has("from") ? DateTime.fromISO(url.searchParams.get("from")||"") : undefined;
-  const raw_dataset = require("app/assets/data.json");
   const dataset: MapPoint[] = raw_dataset.map((d: {date:string}) => ({...d, date: DateTime.fromISO(d.date)}))
-  const num_days = dataset[dataset.length-1].date.diff(dataset[0].date).as('days');
+
   return json({
     current: dataset.find((i) => (i.id == current)),
     dataset: dataset.filter((i) => {
@@ -28,8 +29,8 @@ export const loader: LoaderFunction = async ({request}) => {
         return i.date.startOf("day") <= from.startOf("day")
       }
     }),
-    numDays: Math.floor(num_days),
-    startDate: dataset[0].date
+    startDate: dataset[0].date,
+    endDate: dataset[dataset.length-1].date
   });
 };
 
@@ -51,12 +52,17 @@ const EmbedViewer = (props: {links: string[]}) =>  {
 export default function Index() {
   const data: LoaderResponse = useLoaderData();
   const [searchParams, setSearchParams] = useSearchParams();
+  
+  const dateRangeStart = DateTime.fromISO(data.startDate);
+  const dateRangeEnd = DateTime.fromISO(data.endDate);
+  const dateRange = Math.floor(dateRangeEnd.diff(dateRangeStart).as('days'));
 
   const [current, setCurrent] = useState<MapPoint | undefined>(data.current);
-  const [days, setDays] = useState(data.numDays);
+  const [days, setDays] = useState(searchParams.has("from") ? Math.floor(DateTime.fromISO(searchParams.get("from")||"").diff(dateRangeStart).as('days')) : dateRange);
+
   useEffect(() => {
     let params = searchParams;
-    params.set("from", DateTime.fromISO(data.startDate).plus({days: days}).toISODate())
+    params.set("from", dateRangeStart.plus({days: days}).toISODate())
     if (current) {
       params.set("current", current.id);
     } else {
@@ -79,9 +85,9 @@ export default function Index() {
         </div>
         <div className="card w-80 md:w-96 bg-base-100 shadow-xl mt-4 hidden md:block">
           <div className="card-body">
-            <input type="range" min="0" max={data.numDays} value={days} onChange={(e) => {setDays(parseInt(e.target.value)); setCurrent(undefined)}} className="range"/>
+            <input type="range" min="0" max={dateRange} value={days} onChange={(e) => {setDays(parseInt(e.target.value)); setCurrent(undefined)}} className="range"/>
             <p className='text-center'>
-              <b>{DateTime.fromISO(data.startDate).toLocaleString()}</b> - <b>{DateTime.fromISO(data.startDate).plus({days: days}).toLocaleString()}</b>
+              <b>{dateRangeStart.toLocaleString()}</b> - <b>{dateRangeStart.plus({days: days}).toLocaleString()}</b>
             </p>
           </div>
         </div>
