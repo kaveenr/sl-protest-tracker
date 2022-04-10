@@ -8,6 +8,7 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import styles from "./styles/app.css"
+import cstyles from "react-datepicker/dist/react-datepicker.css";
 
 export const meta: MetaFunction = () => ({
   charset: "utf-8",
@@ -41,6 +42,10 @@ export function links() {
     {
       rel: "stylesheet",
       href: "https://api.tiles.mapbox.com/mapbox-gl-js/v2.8.0/mapbox-gl.css",
+    },
+    {
+      rel: "stylesheet",
+      href: cstyles,
     },
   ]
 }

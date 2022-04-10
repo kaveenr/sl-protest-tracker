@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import Map, { Marker, Popup } from 'react-map-gl';
 import { MapPoint, PointSize } from '~/services/sheetService';
 import marker from '~/assets/marker.png';
-import { DateTime } from 'luxon';
+import { DateTime, Interval } from 'luxon';
 import Embed from 'react-embed';
+import DatePicker from "react-datepicker";
 
 const raw_dataset = require("app/assets/data.json");
 
@@ -17,22 +18,20 @@ interface LoaderResponse {
 }
 
 export const loader: LoaderFunction = async ({request}) => {
-  const url = new URL(request.url);
-  const current = url.searchParams.get("current");
-  const from = url.searchParams.has("from") ? DateTime.fromISO(url.searchParams.get("from")||"") : undefined;
+
   const dataset: MapPoint[] = raw_dataset.map((d: {date:string}) => ({...d, date: DateTime.fromISO(d.date)}))
+
+  const url = new URL(request.url);
+  const current = url.searchParams.get("current") || undefined;
+  const from = url.searchParams.has("from") ? DateTime.fromISO(url.searchParams.get("from")||"") : dataset[0].date;
+  const to = url.searchParams.has("to") ? DateTime.fromISO(url.searchParams.get("to")||"") : dataset[dataset.length-1].date;
+  const timeRange = Interval.fromDateTimes(from, to.plus({days:1}));
 
   return json({
     current: dataset.find((i) => (i.id == current)),
-    dataset: dataset.filter((i) => {
-      if (from) {
-        return i.date.startOf("day") <= from.startOf("day")
-      } else {
-        return true;
-      }
-    }),
-    startDate: dataset[0].date,
-    endDate: dataset[dataset.length-1].date
+    dataset: dataset.filter((i) => (timeRange.contains(i.date))),
+    startDate: from,
+    endDate: to
   });
 };
 
@@ -61,29 +60,32 @@ const EmbedViewer = (props: {links: string[]}) =>  {
 export default function Index() {
   const data: LoaderResponse = useLoaderData();
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  const dateRangeStart = DateTime.fromISO(data.startDate);
-  const dateRangeEnd = DateTime.fromISO(data.endDate);
-  const dateRange = Math.floor(dateRangeEnd.diff(dateRangeStart).as('days'));
 
   const [current, setCurrent] = useState<MapPoint | undefined>(data.current);
-  const [days, setDays] = useState(searchParams.has("from") ? Math.floor(DateTime.fromISO(searchParams.get("from")||"").diff(dateRangeStart).as('days')) : dateRange);
+  const [dateRange, setDateRange] = useState<(Date|undefined)[]>([
+    DateTime.fromISO(data.startDate).toJSDate(),
+    DateTime.fromISO(data.endDate).toJSDate()
+  ]);
+  const [startDate, endDate] = dateRange;
 
   useEffect(() => {
     let params = searchParams;
-    params.set("from", dateRangeStart.plus({days: days}).toISODate())
+    if (startDate && endDate) {
+      params.set("from", DateTime.fromJSDate(startDate).toISODate());
+      params.set("to", DateTime.fromJSDate(endDate).toISODate());
+    }
     if (current) {
       params.set("current", current.id);
     } else {
       params.delete("current");
     }
     setSearchParams(params);
-  }, [current, days])
+  }, [current, dateRange])
 
   return (
     <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
-      <div className='absolute top-0 left-0 z-50 p-4'>
-        <div className="card w-80 md:w-96 bg-base-100 shadow-xl">
+      <div className='absolute top-0 left-0 z-40 p-4' id="root-portal">
+        <div className="card w-80 md:w-96 bg-base-100 drop-shadow-2xl">
           <div className="card-body">
             <h2 className="card-title text-md md:text-3xl">🇱🇰 Protest Tracker</h2>
             <p className='text-xs md:text-lg'>Visualization of protests taking place in Sri Lanka with data provided by <a href="https://www.watchdog.team" className='text-blue-100'>Watchdog</a>.</p>
@@ -99,11 +101,24 @@ export default function Index() {
         </div>
         <div className="card card-compact w-80 md:w-96 bg-base-100 shadow-xl mt-4 hidden md:block">
           <div className="card-body">
-            <input type="range" min="0" max={dateRange} value={days} onChange={(e) => {setDays(parseInt(e.target.value)); setCurrent(undefined)}} className="range"/>
-            <p className='text-center'>
-              <b>{dateRangeStart.toFormat("DD")}</b> - <b>{dateRangeStart.plus({days: days}).toFormat("DD")}</b><br/>
-              <b>{data.dataset.length}</b> Results
-            </p>
+            <div className="flex justify-between w-full items-center">
+              <p className='w-32'>Date Range :</p>
+              <DatePicker
+                  className='btn btn-outline btn-info btn-sm w-full'
+                  selectsRange
+                  selected={startDate}
+                  startDate={startDate}
+                  endDate={endDate}
+                  maxDate={DateTime.now().toJSDate()}
+                  onChange={(dates)=> {
+                    const [start, end] = dates;
+                    setDateRange([start || undefined, end || undefined]);
+                    setCurrent(undefined)
+                  }}
+                  portalId="root-portal"
+                  dateFormat="d MMM yyyy"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -153,7 +168,7 @@ export default function Index() {
                   <div className="badge badge-secondary">{DateTime.fromISO(current.date.toString()).toFormat("DD")}</div>  
                 </h2>
                 <div className="prose-sm prose-stone">
-                  <p>{current.notes || "Notes Not Available"}</p>
+                  <p>{current.notes?.slice(0,100) || "Notes Not Available"}</p>
                 </div>
                 <div className="flex gap-2">
                   { current.size ? (<div className="badge badge-lg badge-primary">Size: {current.size}</div>) : [] }
