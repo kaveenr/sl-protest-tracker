@@ -57,11 +57,11 @@ const EmbedViewer = (props: {links: string[]}) =>  {
   );
 }
 
-export default function Index() {
-  const data: LoaderResponse = useLoaderData();
-  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [current, setCurrent] = useState<MapPoint | undefined>(data.current);
+const DataFilter = (props: { data : LoaderResponse, change: () => void}) => {
+  const data = props.data;
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [dateRange, setDateRange] = useState<(Date|null)[]>([
     data.startDate ? DateTime.fromISO(data.startDate).toJSDate() : null,
     data.endDate ? DateTime.fromISO(data.endDate).toJSDate() : null
@@ -77,18 +77,61 @@ export default function Index() {
       params.delete("from");
       params.delete("to");
     }
+    setSearchParams(params);
+  }, [dateRange])
+
+  return (
+    <div className="collapse collapse-plus border border-base-300 bg-base-200 rounded-box w-full md:w-96 mt-4">
+      <input type="checkbox" checked={isOpen} onChange={(e) => {setIsOpen(!isOpen)}}/> 
+      <div className="collapse-title text-xl font-medium">
+        Filter Data
+      </div>
+      <div className="collapse-content">
+        <div className="flex justify-between w-full items-center">
+          <DatePicker
+            className='input input-bordered input-primary w-full'
+            selectsRange
+            selected={startDate}
+            startDate={startDate}
+            endDate={endDate}
+            maxDate={DateTime.now().toJSDate()}
+            onChange={(dates) => {
+              const [start, end] = dates;
+              setDateRange([start, end]);
+              props.change()
+            }}
+            isClearable={true}
+            portalId="root-portal"
+            dateFormat="d MMM yyyy"
+            placeholderText='Select Date Range'
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+}
+
+export default function Index() {
+  const data: LoaderResponse = useLoaderData();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [current, setCurrent] = useState<MapPoint | undefined>(data.current);
+
+  useEffect(() => {
+    let params = searchParams;
     if (current) {
       params.set("current", current.id);
     } else {
       params.delete("current");
     }
     setSearchParams(params);
-  }, [current, dateRange])
+  }, [current])
 
   return (
     <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
       <div className='absolute top-0 left-0 z-40 p-4' id="root-portal">
-        <div className="card w-80 md:w-96 bg-base-100 drop-shadow-2xl">
+        <div className="card card-compact md:card-normal w-full md:w-96 bg-base-100 drop-shadow-2xl">
           <div className="card-body">
             <h2 className="card-title text-md md:text-3xl">🇱🇰 Protest Tracker</h2>
             <p className='text-xs md:text-lg'>Visualization of protests taking place in Sri Lanka with data provided by <a href="https://www.watchdog.team" className='text-blue-100'>Watchdog</a>.</p>
@@ -102,29 +145,7 @@ export default function Index() {
             </div>
           </div>
         </div>
-        <div className="card card-compact w-80 md:w-96 bg-base-100 shadow-xl mt-4 hidden md:block">
-          <div className="card-body">
-            <div className="flex justify-between w-full items-center">
-              <DatePicker
-                  className='input input-bordered input-primary w-full'
-                  selectsRange
-                  selected={startDate}
-                  startDate={startDate}
-                  endDate={endDate}
-                  maxDate={DateTime.now().toJSDate()}
-                  onChange={(dates)=> {
-                    const [start, end] = dates;
-                    setDateRange([start, end]);
-                    setCurrent(undefined)
-                  }}
-                  isClearable={true}
-                  portalId="root-portal"
-                  dateFormat="d MMM yyyy"
-                  placeholderText='Select Date Range'
-              />
-            </div>
-          </div>
-        </div>
+        <DataFilter data={data} change={() => (setCurrent(false))}/>
       </div>
       <Map
         mapboxAccessToken={"pk.eyJ1IjoidWtyaHEiLCJhIjoiY2wxcW8wbG9hMG9mNjNvbXUzYnQweXMwYiJ9.QyJ6j0pLyLs4MlkmoiC5ww"}
@@ -148,7 +169,7 @@ export default function Index() {
           }
           return (
             <Marker key={i.id} latitude={i.lat} longitude={i.lng} style={{ width: `${em}em`, height: `${em}em`}}>
-              <a onClick={(e) => { setCurrent(i) }} className={`w-full h-full bg-opacity-20 bg-red-900 rounded-full flex justify-center items-center`}>
+              <a onClick={(e) => { setCurrent(i) }} className={`w-full h-full bg-gradient-radial from-red-600/50 to-transparent rounded-full flex justify-center items-center`}>
                 <img src={marker} width={"32px"} height={"32px"} />
               </a>
             </Marker>
@@ -165,7 +186,7 @@ export default function Index() {
             maxWidth={"360px"}
             className='p-0'
           >
-            <div className="card-compact text-black">
+            <div className="card card-compact md:card-normal text-black">
               <div className="card-body text-xs md:text-xl" style={{padding: "0.2em 0.3em"}}>
                 <h2 className="card-title">
                   <p className="truncate">{current.location}</p>
