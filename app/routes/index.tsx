@@ -13,8 +13,8 @@ const raw_dataset = require("app/assets/data.json");
 interface LoaderResponse {
   current?: MapPoint;
   dataset: MapPoint[];
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export const loader: LoaderFunction = async ({request}) => {
@@ -23,13 +23,13 @@ export const loader: LoaderFunction = async ({request}) => {
 
   const url = new URL(request.url);
   const current = url.searchParams.get("current") || undefined;
-  const from = url.searchParams.has("from") ? DateTime.fromISO(url.searchParams.get("from")||"") : dataset[0].date;
-  const to = url.searchParams.has("to") ? DateTime.fromISO(url.searchParams.get("to")||"") : dataset[dataset.length-1].date;
-  const timeRange = Interval.fromDateTimes(from, to.plus({days:1}));
+  const from = url.searchParams.has("from") ? DateTime.fromISO(url.searchParams.get("from")||"") : null;
+  const to = url.searchParams.has("to") ? DateTime.fromISO(url.searchParams.get("to")||"") : null;
+  const timeRange = (from && to) ? Interval.fromDateTimes(from, to.plus({days:1})) : null;
 
   return json({
     current: dataset.find((i) => (i.id == current)),
-    dataset: dataset.filter((i) => (timeRange.contains(i.date))),
+    dataset: dataset.filter((i) => (timeRange ? timeRange.contains(i.date) : true)),
     startDate: from,
     endDate: to
   });
@@ -62,9 +62,9 @@ export default function Index() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [current, setCurrent] = useState<MapPoint | undefined>(data.current);
-  const [dateRange, setDateRange] = useState<(Date|undefined)[]>([
-    DateTime.fromISO(data.startDate).toJSDate(),
-    DateTime.fromISO(data.endDate).toJSDate()
+  const [dateRange, setDateRange] = useState<(Date|null)[]>([
+    data.startDate ? DateTime.fromISO(data.startDate).toJSDate() : null,
+    data.endDate ? DateTime.fromISO(data.endDate).toJSDate() : null
   ]);
   const [startDate, endDate] = dateRange;
 
@@ -73,6 +73,9 @@ export default function Index() {
     if (startDate && endDate) {
       params.set("from", DateTime.fromJSDate(startDate).toISODate());
       params.set("to", DateTime.fromJSDate(endDate).toISODate());
+    } else {
+      params.delete("from");
+      params.delete("to");
     }
     if (current) {
       params.set("current", current.id);
@@ -102,9 +105,8 @@ export default function Index() {
         <div className="card card-compact w-80 md:w-96 bg-base-100 shadow-xl mt-4 hidden md:block">
           <div className="card-body">
             <div className="flex justify-between w-full items-center">
-              <p className='w-32'>Date Range :</p>
               <DatePicker
-                  className='btn btn-outline btn-info btn-sm w-full'
+                  className='input input-bordered input-primary w-full'
                   selectsRange
                   selected={startDate}
                   startDate={startDate}
@@ -112,11 +114,13 @@ export default function Index() {
                   maxDate={DateTime.now().toJSDate()}
                   onChange={(dates)=> {
                     const [start, end] = dates;
-                    setDateRange([start || undefined, end || undefined]);
+                    setDateRange([start, end]);
                     setCurrent(undefined)
                   }}
+                  isClearable={true}
                   portalId="root-portal"
                   dateFormat="d MMM yyyy"
+                  placeholderText='Select Date Range'
               />
             </div>
           </div>
