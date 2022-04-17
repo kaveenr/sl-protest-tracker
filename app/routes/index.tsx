@@ -112,6 +112,29 @@ const DataFilter = (props: { data : LoaderResponse, change: () => void}) => {
 
 }
 
+const DeprecatedModel = () => {
+
+  const [isOpen, setIsOpen] = useState<boolean>(true);
+  return (
+    <>
+      <input type="checkbox" id="my-modal-4" className="modal-toggle" checked={isOpen} onChange={(e) => {setIsOpen(!isOpen)}} />
+      <label htmlFor="my-modal-4" className="modal cursor-pointer">
+        <label className="modal-box relative" htmlFor="">
+          <label htmlFor="my-modal-4" className="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
+          <h3 className="text-lg font-bold">
+            Deprecation Notice
+          </h3>
+          <div className="py-4 prose">
+            <p>Thanks for visiting this website, this tool has been deprecated.</p>
+            <p>This means that the data shown may not be accurate or up to date. Please use the official Watchdog team web app linked below.</p>
+            <a className="text-blue-300" href="https://protests.watchdog.team">protests.watchdog.team</a>
+          </div>
+        </label>
+      </label>
+    </>
+  );
+}
+
 export default function Index() {
   const data: LoaderResponse = useLoaderData();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -130,11 +153,14 @@ export default function Index() {
 
   return (
     <div className='static' style={{ height: "100vh", width: "100vw", padding: "0px", margin: "0px" }}>
+      {/* DEPRECATION NOTICE START */}
+      <DeprecatedModel/>
+      {/* DEPRECATION NOTICE END */}
       <div className='absolute top-0 left-0 z-40 p-4' id="root-portal">
         <div className="card card-compact md:card-normal w-full md:w-96 bg-base-100 drop-shadow-2xl">
           <div className="card-body">
             <h2 className="card-title text-md md:text-3xl">🇱🇰 Protest Tracker</h2>
-            <p className='text-xs md:text-lg'>Visualization of protests taking place in Sri Lanka with data provided by <a href="https://www.watchdog.team" className='text-blue-100'>Watchdog</a>.</p>
+            <p className='text-xs md:text-lg'>Visualization of protests taking place in Sri Lanka with data provided by <a href="https://www.watchdog.team" className='text-blue-300'>Watchdog</a>.</p>
             <div className="card-actions justify-left mt-2">
               <a className="btn btn-primary btn-sm" href="https://docs.google.com/spreadsheets/d/1yShvemHd_eNNAtC3pmxPs9B5RbGmfBUP1O6WGQ5Ycrg/edit#gid=0" target="_blank">
                 Data Source
@@ -145,7 +171,7 @@ export default function Index() {
             </div>
           </div>
         </div>
-        <DataFilter data={data} change={() => (setCurrent(false))}/>
+        <DataFilter data={data} change={() => (setCurrent(undefined))}/>
       </div>
       <Map
         mapboxAccessToken={"pk.eyJ1IjoidWtyaHEiLCJhIjoiY2wxcW8wbG9hMG9mNjNvbXUzYnQweXMwYiJ9.QyJ6j0pLyLs4MlkmoiC5ww"}
